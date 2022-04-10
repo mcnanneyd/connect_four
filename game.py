@@ -1,6 +1,7 @@
 #import tensorflow as tf
 import numpy as np
 import argparse
+from agents import *
 
 
 class GameState():
@@ -19,6 +20,8 @@ class GameState():
 
         print("Initialized board:")
         print(self)
+        self.num_columns = n
+        self.num_rows = n
     
     def __repr__(self):
         repr_str = ""
@@ -63,13 +66,15 @@ class GameState():
             for j in range(num_columns - (self.connect - 1)):
                 if self.board[i, j] == player and self.board[i, j+1] == player \
                         and self.board[i, j+2] == player and self.board[i, j+3] == player:
+                    print("Horizontal Win")
                     return True
 
         # Check Verticle, Bottom->Top
-        for i in range(num_rows-1, -1, -1):
+        for i in range(num_rows-1, self.connect, -1):
             for j in range(num_columns):
                 if self.board[i, j] == player and self.board[i-1, j] == player \
                         and self.board[i-2, j] == player and self.board[i-3, j] == player:
+                    print("Verticle Win")
                     return True
 
         # Check Downward Slope
@@ -77,6 +82,7 @@ class GameState():
             for j in range(num_columns - (self.connect - 1)):
                 if self.board[i, j] == player and self.board[i+1, j+1] == player \
                         and self.board[i+2, j+2] == player and self.board[i+3, j+3] == player:
+                    print("Downward Slope Win")
                     return True
 
         # Check Upward Slope
@@ -84,9 +90,20 @@ class GameState():
             for j in range(self.connect -1, num_columns):
                 if self.board[i, j] == player and self.board[i+1, j-1] == player \
                         and self.board[i+2, j-2] == player and self.board[i+3, j-3] == player:
+                    print("Upward Slope Win")
                     return True
 
         return False
+
+    def get_valid_indices(self) -> set:
+        valid = set()
+        top_row = self.board[0]
+        for i, val in enumerate(top_row):
+            if val == 0:
+                valid.add(i)
+        
+        return valid
+
     
     def __str__(self):
         return self.__repr__()
@@ -94,55 +111,27 @@ class GameState():
 
 def main(n: int):
     board = GameState(n)
-    """
-    board.add_piece(2, 1)
-    board.add_piece(1, 2)
-    board.add_piece(2, 2)
-    board.add_piece(1, 3)
-    board.add_piece(1, 3)
-    board.add_piece(2, 3)
-    board.add_piece(1, 4)
-    board.add_piece(1, 4)
-    board.add_piece(1, 4)
-    board.add_piece(2, 4)
-    """
-    board.add_piece(1, 1)
-    board.add_piece(1, 1)
-    board.add_piece(1, 1)
+    player1 = HumanAgent(player=1)
+    player2 = RandomAgent(player=2)
 
-    board.add_piece(1, 2)
-    board.add_piece(1, 2)
-    board.add_piece(1, 2)
+    while True:
+        print("\nPlayer 1's Turn\n")
+        choice = player1.take_turn(board)
+        board.add_piece(player=1, i=choice)
 
-    board.add_piece(1, 3)
-    board.add_piece(1, 3)
-    board.add_piece(1, 3)
+        if board.has_won(1):
+            print("\n\nPlayer 1 WINS!\n\n")
+            print(board)
+            break
 
-    board.add_piece(1, 4)
-    board.add_piece(1, 4)
-    board.add_piece(1, 4)
+        print("\nPlayer 2's Turn\n")
+        choice = player2.take_turn(board)
+        board.add_piece(player=2, i=choice)
 
-    board.add_piece(1, 4)
-    board.add_piece(1, 4)
-    board.add_piece(1, 4)
-    board.add_piece(2, 4)
-    board.add_piece(1, 3)
-    board.add_piece(1, 3)
-    board.add_piece(2, 3)
-    board.add_piece(1, 2)
-    board.add_piece(2, 2)
-    board.add_piece(2, 1)
-    #board.add_piece(2, 3)
-    #board.add_piece(2, 3)
-    #board.add_piece(2, 3)
-    #board.add_piece(1, 3)
-    #board.add_piece(1, 3)
-    #board.add_piece(1, 3)
-    #board.add_piece(1, 3)
-    #board.add_piece(2, 3)
-    print(board.has_won(2))
-
-    print(board)
+        if board.has_won(2):
+            print("\n\nPlayer 2 WINS!\n\n")
+            print(board)
+            break
 
 
 
