@@ -4,7 +4,7 @@ import argparse
 
 
 class GameState():
-    def __init__(self, n: int):
+    def __init__(self, n: int, connect: int = 4):
         """
         Arguments:
             n: size of board (nxn)
@@ -15,6 +15,7 @@ class GameState():
         self.player1 = 1
         self.player2 = 2
         self.size = n
+        self.connect = 4
 
         print("Initialized board:")
         print(self)
@@ -47,6 +48,45 @@ class GameState():
                 return
 
         self.board[-1, i] = player
+
+    def has_won(self, player):
+        # j ->
+        # i |
+        #   v
+
+        num_columns = len(self.board[0])
+        num_rows = len(self.board)
+
+
+        # Check Horizontal, Bottom->Top
+        for i in range(num_rows-1, -1, -1):
+            for j in range(num_columns - (self.connect - 1)):
+                if self.board[i, j] == player and self.board[i, j+1] == player \
+                        and self.board[i, j+2] == player and self.board[i, j+3] == player:
+                    return True
+
+        # Check Verticle, Bottom->Top
+        for i in range(num_rows-1, -1, -1):
+            for j in range(num_columns):
+                if self.board[i, j] == player and self.board[i-1, j] == player \
+                        and self.board[i-2, j] == player and self.board[i-3, j] == player:
+                    return True
+
+        # Check Downward Slope
+        for i in range(num_rows-self.connect, -1, -1):
+            for j in range(num_columns - (self.connect - 1)):
+                if self.board[i, j] == player and self.board[i+1, j+1] == player \
+                        and self.board[i+2, j+2] == player and self.board[i+3, j+3] == player:
+                    return True
+
+        # Check Upward Slope
+        for i in range(num_rows-self.connect, -1, -1):
+            for j in range(self.connect -1, num_columns):
+                if self.board[i, j] == player and self.board[i+1, j-1] == player \
+                        and self.board[i+2, j-2] == player and self.board[i+3, j-3] == player:
+                    return True
+
+        return False
     
     def __str__(self):
         return self.__repr__()
@@ -54,15 +94,53 @@ class GameState():
 
 def main(n: int):
     board = GameState(n)
-    board.add_piece(1, 1)
+    """
+    board.add_piece(2, 1)
+    board.add_piece(1, 2)
+    board.add_piece(2, 2)
+    board.add_piece(1, 3)
     board.add_piece(1, 3)
     board.add_piece(2, 3)
+    board.add_piece(1, 4)
+    board.add_piece(1, 4)
+    board.add_piece(1, 4)
+    board.add_piece(2, 4)
+    """
+    board.add_piece(1, 1)
+    board.add_piece(1, 1)
+    board.add_piece(1, 1)
+
+    board.add_piece(1, 2)
+    board.add_piece(1, 2)
+    board.add_piece(1, 2)
+
+    board.add_piece(1, 3)
+    board.add_piece(1, 3)
+    board.add_piece(1, 3)
+
+    board.add_piece(1, 4)
+    board.add_piece(1, 4)
+    board.add_piece(1, 4)
+
+    board.add_piece(1, 4)
+    board.add_piece(1, 4)
+    board.add_piece(1, 4)
+    board.add_piece(2, 4)
+    board.add_piece(1, 3)
+    board.add_piece(1, 3)
     board.add_piece(2, 3)
-    board.add_piece(2, 3)
-    board.add_piece(2, 3)
-    board.add_piece(2, 3)
-    board.add_piece(2, 3)
-    board.add_piece(2, 3)
+    board.add_piece(1, 2)
+    board.add_piece(2, 2)
+    board.add_piece(2, 1)
+    #board.add_piece(2, 3)
+    #board.add_piece(2, 3)
+    #board.add_piece(2, 3)
+    #board.add_piece(1, 3)
+    #board.add_piece(1, 3)
+    #board.add_piece(1, 3)
+    #board.add_piece(1, 3)
+    #board.add_piece(2, 3)
+    print(board.has_won(2))
 
     print(board)
 
@@ -70,7 +148,7 @@ def main(n: int):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Pass Size of the Desired Connect Four Matrix")
-    parser.add_argument('-size', metavar="n", type=int, const="default", default=8,
+    parser.add_argument('-size', metavar="n", type=int, const="default", default=7,
                     help='size of nXn connect four matrix', nargs="?")
 
     args = parser.parse_args()
