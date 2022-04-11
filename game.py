@@ -42,15 +42,27 @@ class GameState():
         return repr_str
 
     def add_piece(self, player: int, i: int):
-        if all(self.board[:, i]):
+        print("oh", self.board)
+        if self.board[:, i].all():
             raise ValueError("Selected column is full")
 
         for j, row in enumerate(self.board):
+            print("ah", row[i])
             if row[i]:
                 self.board[j-1, i] = player
                 return
 
         self.board[-1, i] = player
+
+    def is_full(self):
+        full = True
+        for cell in self.board[0]:
+            if cell:
+                full = False
+        return full 
+
+    def terminal(self):
+        return self.is_full() or self.has_won(1) or self.has_won(2)       
 
     def has_won(self, player):
         # j ->
@@ -95,12 +107,12 @@ class GameState():
 
         return False
 
-    def get_valid_indices(self) -> set:
-        valid = set()
+    def get_valid_indices(self) -> list:
+        valid = []
         top_row = self.board[0]
         for i, val in enumerate(top_row):
             if val == 0:
-                valid.add(i)
+                valid.append(i)
         
         return valid
 
@@ -112,7 +124,7 @@ class GameState():
 def main(n: int):
     board = GameState(n)
     player1 = HumanAgent(player=1)
-    player2 = RandomAgent(player=2)
+    player2 = MiniMaxAgent(player=2)
 
     while True:
         print("\nPlayer 1's Turn\n")
