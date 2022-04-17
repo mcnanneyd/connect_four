@@ -123,14 +123,14 @@ class MiniMaxAgent():
 
     def take_turn(self, game_state: GameState) -> int:
         def minimax(state: GameState, maximizer: bool, depth: int, alpha: int = -sys.maxsize - 1, beta: int = sys.maxsize):
-            min_i = None
-            max_i = None
+            min_i = random.choice(state.get_valid_indices())
+            max_i = random.choice(state.get_valid_indices())
             if state.terminal() or depth == 0: 
                 if state.has_won(self.max_player):      # max player receives large reward
                     return (None, sys.maxsize)
                 elif state.has_won(self.min_player):    # min player receives large reward
                     return (None, -sys.maxsize - 1) 
-                if state.is_full():
+                elif state.is_full():
                     return (None, 0)                    # nobody wins
 
                 if depth == 0:
@@ -160,7 +160,7 @@ class MiniMaxAgent():
                     state_copy = state.__deepcopy__()
                     state_copy.add_piece(self.min_player, i)
                     col, score = minimax(state_copy, True, depth-1, alpha, beta)
-                    if score > min_val:
+                    if score < min_val:
                         min_i = i
                         min_val = score
                     beta = min(beta, min_val)
