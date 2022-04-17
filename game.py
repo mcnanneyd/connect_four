@@ -2,24 +2,23 @@
 import numpy as np
 import argparse
 from agents import *
-
+import copy
 
 class GameState():
-    def __init__(self, n: int, connect: int = 4):
+    def __init__(self, n: int, connect: int = 4, board: np.ndarray = None):
         """
         Arguments:
             n: size of board (nxn)
         """
-        print(f"Creating a connect four matrix of size {n}X{n}\n")
-        self.board = np.zeros((n, n))
-
+        if board is None:
+            self.board = np.zeros((n, n))
+        else:
+            self.board = board
         self.player1 = 1
         self.player2 = 2
         self.size = n
-        self.connect = 4
+        self.connect = connect
 
-        print("Initialized board:")
-        print(self)
         self.num_columns = n
         self.num_rows = n
     
@@ -41,14 +40,18 @@ class GameState():
         
         return repr_str
 
+    def __copy__(self):
+        return GameState(self.size, self.connect, board=np.copy(self.board))
+
+    def __deepcopy__(self):
+        return GameState(self.size, self.connect, board=np.copy(self.board))
+
     def add_piece(self, player: int, i: int):
-        print("oh", self.board)
         if self.board[:, i].all():
             raise ValueError("Selected column is full")
 
-        for j, row in enumerate(self.board):
-            print("ah", row[i])
-            if row[i]:
+        for j in range(self.size):
+            if self.board[j, i]:
                 self.board[j-1, i] = player
                 return
 
@@ -57,7 +60,7 @@ class GameState():
     def is_full(self):
         full = True
         for cell in self.board[0]:
-            if cell:
+            if not cell:
                 full = False
         return full 
 
@@ -78,7 +81,7 @@ class GameState():
             for j in range(num_columns - (self.connect - 1)):
                 if self.board[i, j] == player and self.board[i, j+1] == player \
                         and self.board[i, j+2] == player and self.board[i, j+3] == player:
-                    print("Horizontal Win")
+                    #print("Horizontal Win")
                     return True
 
         # Check Verticle, Bottom->Top
@@ -86,7 +89,7 @@ class GameState():
             for j in range(num_columns):
                 if self.board[i, j] == player and self.board[i-1, j] == player \
                         and self.board[i-2, j] == player and self.board[i-3, j] == player:
-                    print("Verticle Win")
+                    #print("Verticle Win")
                     return True
 
         # Check Downward Slope
@@ -94,7 +97,7 @@ class GameState():
             for j in range(num_columns - (self.connect - 1)):
                 if self.board[i, j] == player and self.board[i+1, j+1] == player \
                         and self.board[i+2, j+2] == player and self.board[i+3, j+3] == player:
-                    print("Downward Slope Win")
+                    #print("Downward Slope Win")
                     return True
 
         # Check Upward Slope
@@ -102,7 +105,7 @@ class GameState():
             for j in range(self.connect -1, num_columns):
                 if self.board[i, j] == player and self.board[i+1, j-1] == player \
                         and self.board[i+2, j-2] == player and self.board[i+3, j-3] == player:
-                    print("Upward Slope Win")
+                    #print("Upward Slope Win")
                     return True
 
         return False

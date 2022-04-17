@@ -9,18 +9,18 @@ class HumanAgent():
     def __init__(self, player: int = 1):
         self.player = player
 
-    def take_turn(self, board) -> int:
+    def take_turn(self, state) -> int:
         print("Select a valid index")
-        valid = board.get_valid_indices()
+        valid = state.get_valid_indices()
         vis_list = []
-        for i in range(board.size):
+        for i in range(state.size):
             if i in valid:
                 vis_list.append(str(i))
             else:
                 vis_list.append("*")
         vis_str = " " + " | ".join(vis_list) + "\n"
         print(vis_str)
-        print(board)
+        print(state)
         while True:
             request = input("Input Move: ")
             try:
@@ -36,9 +36,9 @@ class RandomAgent():
     def __init__(self, player: int = 2, depth: int = 25):
         self.player = player
 
-    def take_turn(self, board) -> int:
+    def take_turn(self, state) -> int:
         start_time = time.time()
-        valid = board.get_valid_indices()
+        valid = state.get_valid_indices()
         time_taken = (time.time() - start_time) / 1e6 #
         print(f"Player {self.player} (Random Agent) took their turn in {time_taken:.2f} μs")
         return random.choice(valid)
@@ -49,21 +49,23 @@ class MiniMaxAgent():
         self.max_player = player
         self.min_player = 2 if player == 1 else 1
 
-    def take_turn(self, game_board: GameState) -> int:
-        def minimax(board: GameState, max: bool, depth: int, alpha: int = sys.maxsize, beta: int = -sys.maxsize - 1):
-            if board.terminal(): 
-                if board.has_won(self.max_player):      # max player receives large reward
+    def take_turn(self, game_state: GameState) -> int:
+        def minimax(state: GameState, maximizer: bool, depth: int, alpha: int = sys.maxsize, beta: int = -sys.maxsize - 1):
+            min_i = None
+            max_i = None
+            if state.terminal(): 
+                if state.has_won(self.max_player):      # max player receives large reward
                     return (None, sys.maxsize)
-                elif board.has_won(self.min_player):    # min player receives large reward
+                elif state.has_won(self.min_player):    # min player receives large reward
                     return (None, -sys.maxsize - 1) 
                 return (None, 0)                        # nobody wins
 
-            if max:                                 # if it is maximizing players turn
+            if maximizer:                                 # if it is maximizing players turn
                 max_val = -sys.maxsize - 1
-                for i in board.get_valid_indices():
-                    board_copy = copy.deepcopy(board)
-                    board_copy.add_piece(self.max_player, i)
-                    score = minimax(board_copy, False, depth-1, alpha, beta)[1]
+                for i in state.get_valid_indices():
+                    state_copy = state.__deepcopy__()
+                    state_copy.add_piece(self.max_player, i)
+                    col, score = minimax(state_copy, False, depth-1, alpha, beta)
                     if score > max_val:
                         max_i = i
                         max_val = score
@@ -74,11 +76,11 @@ class MiniMaxAgent():
                 return max_i, max_val
 
             else:                                   # if it is minimizing players turn
-                max_val = sys.minint
-                for i in board.get_valid_indices():
-                    board_copy = copy.deepcopy(board)
-                    board_copy.add_piece(self.min_player, i)
-                    score = minimax(board_copy, True, depth-1, alpha, beta)[1]
+                min_val = sys.maxsize
+                for i in state.get_valid_indices():
+                    state_copy = state.__deepcopy__()
+                    state_copy.add_piece(self.min_player, i)
+                    col, score = minimax(state_copy, True, depth-1, alpha, beta)
                     if score > min_val:
                         min_i = i
                         min_val = score
@@ -89,7 +91,7 @@ class MiniMaxAgent():
                 return min_i, min_val
                 
         start_time = time.time()
-        col, _ = minimax(game_board, True, game_board.size)
+        col, _ = minimax(game_state, True, game_state.size)
         
         time_taken = (time.time() - start_time) / 1e6 #
 
