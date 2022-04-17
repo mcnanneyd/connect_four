@@ -85,7 +85,7 @@ class GameState():
                     return True
 
         # Check Verticle, Bottom->Top
-        for i in range(num_rows-1, self.connect, -1):
+        for i in range(num_rows-1, self.connect-2, -1):
             for j in range(num_columns):
                 if self.board[i, j] == player and self.board[i-1, j] == player \
                         and self.board[i-2, j] == player and self.board[i-3, j] == player:
