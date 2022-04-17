@@ -71,7 +71,6 @@ def evaluate_section(section, this_player):
     if section.count(opposing_player) == 3 and section.count(0) == 1:
         reward += OPP_REWARD
     
-    print("reward", reward)
     return reward
         
     
@@ -134,9 +133,7 @@ class MiniMaxAgent():
                     return (None, 0)                    # nobody wins
 
                 if depth == 0:
-                    print("depth 0")
                     reward = evaluate_state(state, self.max_player)
-                    print(reward)
                     return (None, reward)
 
             if maximizer:                                 # if it is maximizing players turn
@@ -172,7 +169,7 @@ class MiniMaxAgent():
         start_time = time.time()
         col, _ = minimax(game_state, True, 5)
         
-        time_taken = (time.time() - start_time) / 1e6 #
+        time_taken = (time.time() - start_time) #
 
-        print(f"Player {self.max_player} (MiniMax Agent) took their turn in {time_taken:.2f} μs")
+        print(f"Player {self.max_player} (MiniMax Agent) took their turn in {time_taken:.2f} s")
         return col
