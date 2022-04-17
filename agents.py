@@ -5,14 +5,6 @@ import sys
 import copy
 from game import GameState
 
-#TODO: Determine optimal rewards
-TWO_REWARD = 2
-THREE_REWARD = 4
-FOUR_REWARD = 100
-OPP_REWARD = -4
-MIDDLE_MULTIPLIER = 3
-
-
 class HumanAgent():
     def __init__(self, player: int = 1):
         self.player = player
@@ -52,73 +44,18 @@ class RandomAgent():
         return random.choice(valid)
 
 
-def evaluate_section(section, this_player):
-    reward = 0
-
-    if this_player == 1:
-        opposing_player = 2
-    else:
-        opposing_player = 1
-
-
-    if section.count(this_player) == 2 and section.count(0) == 2:
-        reward += TWO_REWARD
-    elif section.count(this_player) == 3 and section.count(0) == 1:
-        reward += THREE_REWARD
-    elif section.count(this_player) == 4:
-        reward += FOUR_REWARD
-
-    if section.count(opposing_player) == 3 and section.count(0) == 1:
-        reward += OPP_REWARD
-    
-    return reward
-        
-    
-
-def evaluate_state(state, player):
-    #TODO: Determine optimal rewards
-
-    reward = 0
-    num_rows = state.num_rows
-    num_columns = state.num_columns
-    middle_col = state.num_columns // 2
-
-    # Score Horizontal, Bottom->Top
-    for i in range(num_rows-1, -1, -1):
-        for j in range(num_columns - (state.connect - 1)):
-            section = [state.board[i, j+c] for c in range(state.connect)]
-            reward += evaluate_section(section, player)
-
-    # Score Verticle, Bottom->Top
-    for i in range(num_rows-1, state.connect-2, -1):
-        for j in range(num_columns):
-            if j == middle_col:
-                multiplier = MIDDLE_MULTIPLIER
-            else:
-                multiplier = 1
-            section = [state.board[i-c, j] for c in range(state.connect)]
-            reward += multiplier * evaluate_section(section, player)
-            
-
-    # Score Downward Slope
-    for i in range(num_rows-state.connect, -1, -1):
-        for j in range(num_columns - (state.connect - 1)):
-            section = [state.board[i+c, j+c] for c in range(state.connect)]
-            reward += evaluate_section(section, player)
-
-    # Score Upward Slope
-    for i in range(num_rows-state.connect, -1, -1):
-        for j in range(state.connect -1, num_columns):
-            section = [state.board[i+c, j-c] for c in range(state.connect)]
-            reward += evaluate_section(section, player)
-    
-    return reward
-
 
 class MiniMaxAgent():
-    def __init__(self, player: int = 2):
+    def __init__(self, player: int = 2, TWO_REWARD: float = 2.0, THREE_REWARD: float = 4.0, 
+            FOUR_REWARD: float = 100.0, OPP_REWARD: float = -4, MIDDLE_MULTIPLIER: float = 3.0):
         self.max_player = player
         self.min_player = 2 if player == 1 else 1
+
+        self.TWO_REWARD = TWO_REWARD
+        self.THREE_REWARD = THREE_REWARD
+        self.FOUR_REWARD = FOUR_REWARD
+        self.OPP_REWARD = OPP_REWARD
+        self.MIDDLE_MULTIPLIER = MIDDLE_MULTIPLIER
 
     def take_turn(self, game_state: GameState) -> int:
         def minimax(state: GameState, maximizer: bool, depth: int, alpha: int = -sys.maxsize - 1, beta: int = sys.maxsize):
@@ -133,7 +70,7 @@ class MiniMaxAgent():
                     return (None, 0)                    # nobody wins
 
                 if depth == 0:
-                    reward = evaluate_state(state, self.max_player)
+                    reward = self.evaluate_state(state, self.max_player)
                     return (None, reward)
 
             if maximizer:                                 # if it is maximizing players turn
@@ -173,3 +110,65 @@ class MiniMaxAgent():
 
         print(f"Player {self.max_player} (MiniMax Agent) took their turn in {time_taken:.2f} s")
         return col
+
+
+    def evaluate_state(self, state, player):
+        #TODO: Determine optimal rewards
+
+        reward = 0
+        num_rows = state.num_rows
+        num_columns = state.num_columns
+        middle_col = state.num_columns // 2
+
+        # Score Horizontal, Bottom->Top
+        for i in range(num_rows-1, -1, -1):
+            for j in range(num_columns - (state.connect - 1)):
+                section = [state.board[i, j+c] for c in range(state.connect)]
+                reward += self.evaluate_section(section, player)
+
+        # Score Verticle, Bottom->Top
+        for i in range(num_rows-1, state.connect-2, -1):
+            for j in range(num_columns):
+                if j == middle_col:
+                    multiplier = self.MIDDLE_MULTIPLIER
+                else:
+                    multiplier = 1
+                section = [state.board[i-c, j] for c in range(state.connect)]
+                reward += multiplier * self.evaluate_section(section, player)
+                
+
+        # Score Downward Slope
+        for i in range(num_rows-state.connect, -1, -1):
+            for j in range(num_columns - (state.connect - 1)):
+                section = [state.board[i+c, j+c] for c in range(state.connect)]
+                reward += self.evaluate_section(section, player)
+
+        # Score Upward Slope
+        for i in range(num_rows-state.connect, -1, -1):
+            for j in range(state.connect -1, num_columns):
+                section = [state.board[i+c, j-c] for c in range(state.connect)]
+                reward += self.evaluate_section(section, player)
+        
+        return reward
+
+    def evaluate_section(self, section, this_player):
+        reward = 0
+
+        if this_player == 1:
+            opposing_player = 2
+        else:
+            opposing_player = 1
+
+
+        if section.count(this_player) == 2 and section.count(0) == 2:
+            reward += self.TWO_REWARD
+        elif section.count(this_player) == 3 and section.count(0) == 1:
+            reward += self.THREE_REWARD
+        elif section.count(this_player) == 4:
+            reward += self.FOUR_REWARD
+
+        if section.count(opposing_player) == 3 and section.count(0) == 1:
+            reward += self.OPP_REWARD
+        
+        return reward
+            
