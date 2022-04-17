@@ -1,8 +1,10 @@
 #import tensorflow as tf
+from re import U
 import numpy as np
 import argparse
 from agents import *
 import copy
+import json
 
 class GameState():
     def __init__(self, n: int, connect: int = 4, board: np.ndarray = None):
@@ -124,7 +126,7 @@ class GameState():
         return self.__repr__()
             
 
-def main(n: int):
+def human(n: int):
     board = GameState(n)
     player1 = HumanAgent(player=1)
     player2 = MiniMaxAgent(player=2)
@@ -148,6 +150,76 @@ def main(n: int):
             print(board)
             break
 
+def play_game(agent1, agent2, n):
+    board = GameState(n)
+    while True:
+        choice = agent1.take_turn(board)
+        board.add_piece(player=1, i=choice)
+
+        if board.has_won(1):
+            return True
+
+        choice = agent2.take_turn(board)
+        board.add_piece(player=2, i=choice)
+
+        if board.has_won(2):
+            return False
+
+def explore(n: int):
+    constantAgent = MiniMaxAgent(player=1)
+    two = 2.0
+    three = 4.0
+    four = 100.0
+    opp = -4.0
+    middle = 3.0
+    val_template = {"wins": 0, "losses": 0, "win_rate": 0}
+    step_size = 0.1
+    num_games = 100
+    base_vals = {                
+                    "two"   : 2.0 , 
+                    "three" : 4.0 ,
+                    "four"  : 100 , 
+                    "opp"   : -4.0,
+                    "middle": 3.0 }
+
+    procedure = {
+                "two"   : {"base_val": 2.0 , "range": (0, 10)} , 
+                "three" : {"base_val": 4.0 , "range": (0, 20)} ,
+                "four"  : {"base_val": 100 , "range": (10, 500)} , 
+                "opp"   : {"base_val": -4.0, "range": (-50, 50)} ,
+                "middle": {"base_val": 3.0 , "range": (1, 10)}
+    }
+    results = {
+                "two"   : {} , 
+                "three" : {} ,
+                "four"  : {} , 
+                "opp"   : {} ,
+                "middle": {}}
+
+    with open("explore.json", "w") as outfile:
+        json.dump(results, outfile)
+
+    for variable, info in procedure.items():
+        params = base_vals
+        lower_bound = info["range"][0]
+        upper_bound = info["range"][1]
+        results[variable] = val_template.copy()
+        for val in np.arange(lower_bound, upper_bound, step_size):#range(lower_bound, upper_bound, step_size):
+            params[variable] = val
+            for _ in range(num_games):
+                dynamicAgent = MiniMaxAgent(player = 2, params=params)
+                result = play_game(constantAgent, dynamicAgent, n)
+                if result == True:
+                    results[variable]["wins"] += 1
+                else:
+                    results[variable]["losses"] += 1
+                
+                results[variable]["win_rate"] = results[variable]["wins"] / (results[variable]["wins"] + results[variable]["losses"])
+            print(results[variable])
+    
+    with open("explore.json", "w") as outfile:
+        json.dump(results, outfile)
+
 
 
 if __name__ == '__main__':
@@ -157,4 +229,5 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     n = args.size
-    main(n)
+    #human(n)
+    explore(n)

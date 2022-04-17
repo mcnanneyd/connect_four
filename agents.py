@@ -46,16 +46,25 @@ class RandomAgent():
 
 
 class MiniMaxAgent():
-    def __init__(self, player: int = 2, TWO_REWARD: float = 2.0, THREE_REWARD: float = 4.0, 
-            FOUR_REWARD: float = 100.0, OPP_REWARD: float = -4, MIDDLE_MULTIPLIER: float = 3.0):
+    def __init__(self, player: int = 2, params = None, silent = True):
         self.max_player = player
         self.min_player = 2 if player == 1 else 1
+        self.silent = silent
 
-        self.TWO_REWARD = TWO_REWARD
-        self.THREE_REWARD = THREE_REWARD
-        self.FOUR_REWARD = FOUR_REWARD
-        self.OPP_REWARD = OPP_REWARD
-        self.MIDDLE_MULTIPLIER = MIDDLE_MULTIPLIER
+        if not params:
+            params = {                
+                    "two"   :2.0 , 
+                    "three" :4.0 ,
+                    "four"  :100 , 
+                    "opp"   :-4.0,
+                    "middle":3.0
+            }
+
+        self.TWO_REWARD = params["two"]
+        self.THREE_REWARD = params["three"]
+        self.FOUR_REWARD = params["four"]
+        self.OPP_REWARD = params["opp"]
+        self.MIDDLE_MULTIPLIER = params["middle"]
 
     def take_turn(self, game_state: GameState) -> int:
         def minimax(state: GameState, maximizer: bool, depth: int, alpha: int = -sys.maxsize - 1, beta: int = sys.maxsize):
@@ -108,7 +117,8 @@ class MiniMaxAgent():
         
         time_taken = (time.time() - start_time) #
 
-        print(f"Player {self.max_player} (MiniMax Agent) took their turn in {time_taken:.2f} s")
+        if not self.silent:
+            print(f"Player {self.max_player} (MiniMax Agent) took their turn in {time_taken:.2f} s")
         return col
 
 
