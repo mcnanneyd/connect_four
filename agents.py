@@ -46,11 +46,10 @@ class RandomAgent():
 
 
 class MiniMaxAgent():
-    def __init__(self, player: int = 2, params = None, silent = True):
+    def __init__(self, player: int = 2, params = None, silent = True, randomize = True):
         self.max_player = player
         self.min_player = 2 if player == 1 else 1
         self.silent = silent
-
         if not params:
             params = {                
                     "two"   :2.0 , 
@@ -59,6 +58,11 @@ class MiniMaxAgent():
                     "opp"   :-4.0,
                     "middle":3.0
             }
+        if randomize:
+            for key in params.keys():
+                params[key] *= random.uniform(0.1, 10)
+
+
 
         self.TWO_REWARD = params["two"]
         self.THREE_REWARD = params["three"]
@@ -68,8 +72,6 @@ class MiniMaxAgent():
 
     def take_turn(self, game_state: GameState) -> int:
         def minimax(state: GameState, maximizer: bool, depth: int, alpha: int = -sys.maxsize - 1, beta: int = sys.maxsize):
-            min_i = random.choice(state.get_valid_indices())
-            max_i = random.choice(state.get_valid_indices())
             if state.terminal() or depth == 0: 
                 if state.has_won(self.max_player):      # max player receives large reward
                     return (None, sys.maxsize)
@@ -81,6 +83,8 @@ class MiniMaxAgent():
                 if depth == 0:
                     reward = self.evaluate_state(state, self.max_player)
                     return (None, reward)
+            min_i = random.choice(state.get_valid_indices())
+            max_i = random.choice(state.get_valid_indices())
 
             if maximizer:                                 # if it is maximizing players turn
                 max_val = -sys.maxsize - 1
@@ -118,7 +122,7 @@ class MiniMaxAgent():
         time_taken = (time.time() - start_time) #
 
         if not self.silent:
-            print(f"Player {self.max_player} (MiniMax Agent) took their turn in {time_taken:.2f} s")
+            print(f"Player {self.max_player} (MiniMax Agent) took their turn in {time_taken:.2f} s - choice {col}")
         return col
 
 
@@ -128,7 +132,7 @@ class MiniMaxAgent():
         reward = 0
         num_rows = state.num_rows
         num_columns = state.num_columns
-        middle_col = state.num_columns // 2
+        middle_col = state.num_columns // 2 + 1
 
         # Score Horizontal, Bottom->Top
         for i in range(num_rows-1, -1, -1):

@@ -6,6 +6,7 @@ from agents import *
 import copy
 import json
 from multiprocessing import Process, cpu_count
+from datetime import datetime
 
 class GameState():
     def __init__(self, n: int, connect: int = 4, board: np.ndarray = None):
@@ -130,11 +131,12 @@ class GameState():
 def human(n: int):
     board = GameState(n)
     player1 = HumanAgent(player=1)
-    player2 = MiniMaxAgent(player=2)
+    player2 = HumanAgent(player=2)
 
     while True:
         print("\nPlayer 1's Turn\n")
         choice = player1.take_turn(board)
+        print(board)
         board.add_piece(player=1, i=choice)
 
         if board.has_won(1):
@@ -144,6 +146,7 @@ def human(n: int):
 
         print("\nPlayer 2's Turn\n")
         choice = player2.take_turn(board)
+        print(board)
         board.add_piece(player=2, i=choice)
 
         if board.has_won(2):
@@ -154,17 +157,26 @@ def human(n: int):
 def play_game(agent1, agent2, n):
     board = GameState(n)
     while True:
+        if board.is_full():
+            break
         choice = agent1.take_turn(board)
         board.add_piece(player=1, i=choice)
-
+        with open('error.log', 'a') as f:
+            f.write(f"failed to add piece {datetime.now()}")
         if board.has_won(1):
             return True
 
+        if board.is_full():
+            break
         choice = agent2.take_turn(board)
         board.add_piece(player=2, i=choice)
+        with open('error.log', 'a') as f:
+            f.write(f"failed to add piece {datetime.now()}")
 
         if board.has_won(2):
             return False
+
+        
 
 
 
@@ -176,7 +188,6 @@ def explore(n: int):
     opp = -4.0
     middle = 3.0
     val_template = {"wins": 0, "losses": 0, "win_rate": 0}
-    step_size = 0.1
     num_games = 100
     base_vals = {                
                     "two"   : 2.0 , 
@@ -186,11 +197,11 @@ def explore(n: int):
                     "middle": 3.0 }
 
     procedure = {
-                "two"   : {"base_val": 2.0 , "range": (0.1, 10)} , 
-                "three" : {"base_val": 4.0 , "range": (0.1, 20)} ,
-                "four"  : {"base_val": 100 , "range": (10, 500)} , 
-                "opp"   : {"base_val": -4.0, "range": (-50, 50)} ,
-                "middle": {"base_val": 3.0 , "range": (1, 10)}
+                "two"   : {"base_val": 2.0 , "range": (0.1, 10, 0.1)} , 
+                "three" : {"base_val": 4.0 , "range": (0.1, 20, 0.1)} ,
+                "four"  : {"base_val": 100 , "range": (10, 500, 1)} , 
+                "opp"   : {"base_val": -4.0, "range": (-50, -1, 1)} ,
+                "middle": {"base_val": 3.0 , "range": (1,  300, 1)}
     }
     results = {
                 "two"   : {} , 
@@ -203,28 +214,45 @@ def explore(n: int):
     def var_worker(variable, info):
         def range_worker(variable, values, index):
             params = base_vals.copy()
+            results = {}
             for i, val in enumerate(values):
+                results[val] = {"wins": 0, "losses": 0, "win_rate": 0}
                 params[variable] = val
                 for run in range(num_games):
-                    dynamicAgent = MiniMaxAgent(player = 2, params=params, silent=True)
+                    constantAgent = MiniMaxAgent(player=1)
+                    dynamicAgent = MiniMaxAgent(player = 2, params=params, silent=True, randomize=False)
                     result = play_game(constantAgent, dynamicAgent, n)
                     if result == True:
-                        results[variable]["wins"] += 1
+                        results[val]["wins"] += 1
+                    elif result == False:
+                        results[val]["losses"] += 1
                     else:
-                        results[variable]["losses"] += 1
-                    
-                    results[variable]["win_rate"] = results[variable]["wins"] / (results[variable]["wins"] + results[variable]["losses"])
-            
-                    with open(f"results/{variable}{index}.json", "w") as outfile:
-                        json.dump(results, outfile)
+                        constantAgent = MiniMaxAgent(player=1)
+                        dynamicAgent = MiniMaxAgent(player = 2, params=params, silent=True, randomize=False)
+                        result = play_game(constantAgent, dynamicAgent, n)
+                        if result is None:
+                            continue
 
-                    print(f"{variable}{index}.json     run {i * 100 + run }/{len(values) * 100}:", results[variable])
+                    results[val]["win_rate"] = results[val]["wins"] / (results[val]["wins"] + results[val]["losses"])
+
+
+                    print(f"{variable}{index}.json     run {i * 100 + run }/{len(values) * 100}:", results[val])
+
+                    with open(f"results/{variable}{index}.json", "r") as outfile:
+                        data = json.load(outfile)
+                        print(data)
+                    compiled = {**results , **data}
+                    with open(f"results/{variable}{index}.json", "w") as outfile:
+                        json.dump(compiled)
+
+                    
 
 
         lower_bound = info["range"][0]
         upper_bound = info["range"][1]
+        step_size = info["range"][2]
         results[variable] = val_template.copy()
-        all_vals = np.arange(lower_bound, upper_bound, step_size)
+        all_vals = np.arange(float(lower_bound), float(upper_bound), float(step_size))
         sections = np.array_split(all_vals, 4)
 
         range_procs = []
@@ -257,5 +285,6 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     n = args.size
+    #while True:
     #human(n)
     explore(n)
