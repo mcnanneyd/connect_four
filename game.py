@@ -201,27 +201,41 @@ def explore(n: int):
 
 
     def var_worker(variable, info):
+        def range_worker(variable, values, index):
+            params = base_vals.copy()
+            for i, val in enumerate(values):
+                params[variable] = val
+                for run in range(num_games):
+                    dynamicAgent = MiniMaxAgent(player = 2, params=params, silent=True)
+                    result = play_game(constantAgent, dynamicAgent, n)
+                    if result == True:
+                        results[variable]["wins"] += 1
+                    else:
+                        results[variable]["losses"] += 1
+                    
+                    results[variable]["win_rate"] = results[variable]["wins"] / (results[variable]["wins"] + results[variable]["losses"])
+            
+                    with open(f"results/{variable}{index}.json", "w") as outfile:
+                        json.dump(results, outfile)
+
+                    print(f"{variable}{index}.json     run {i * 100 + run }/{len(values) * 100}:", results[variable])
 
 
-        params = base_vals
         lower_bound = info["range"][0]
         upper_bound = info["range"][1]
         results[variable] = val_template.copy()
-        for val in np.arange(lower_bound, upper_bound, step_size):#range(lower_bound, upper_bound, step_size):
-            params[variable] = val
-            for _ in range(num_games):
-                dynamicAgent = MiniMaxAgent(player = 2, params=params, silent=True)
-                result = play_game(constantAgent, dynamicAgent, n)
-                if result == True:
-                    results[variable]["wins"] += 1
-                else:
-                    results[variable]["losses"] += 1
-                
-                results[variable]["win_rate"] = results[variable]["wins"] / (results[variable]["wins"] + results[variable]["losses"])
-                print(variable, results[variable])
+        all_vals = np.arange(lower_bound, upper_bound, step_size)
+        sections = np.array_split(all_vals, 4)
+
+        range_procs = []
+        for i, section in enumerate(sections):
+            proc = Process(target=range_worker, args=(variable, section, i,))
+            range_procs.append(proc)
+            proc.start()
+
+        for proc in range_procs:
+            proc.join()
         
-                with open(f"{variable}.json", "w") as outfile:
-                    json.dump(results, outfile)
 
     procs = []
     for variable, info in procedure.items():
