@@ -5,6 +5,7 @@ import argparse
 from agents import *
 import copy
 import json
+from multiprocessing import Process, cpu_count
 
 class GameState():
     def __init__(self, n: int, connect: int = 4, board: np.ndarray = None):
@@ -165,6 +166,8 @@ def play_game(agent1, agent2, n):
         if board.has_won(2):
             return False
 
+
+
 def explore(n: int):
     constantAgent = MiniMaxAgent(player=1)
     two = 2.0
@@ -183,8 +186,8 @@ def explore(n: int):
                     "middle": 3.0 }
 
     procedure = {
-                "two"   : {"base_val": 2.0 , "range": (0, 10)} , 
-                "three" : {"base_val": 4.0 , "range": (0, 20)} ,
+                "two"   : {"base_val": 2.0 , "range": (0.1, 10)} , 
+                "three" : {"base_val": 4.0 , "range": (0.1, 20)} ,
                 "four"  : {"base_val": 100 , "range": (10, 500)} , 
                 "opp"   : {"base_val": -4.0, "range": (-50, 50)} ,
                 "middle": {"base_val": 3.0 , "range": (1, 10)}
@@ -196,10 +199,10 @@ def explore(n: int):
                 "opp"   : {} ,
                 "middle": {}}
 
-    with open("explore.json", "w") as outfile:
-        json.dump(results, outfile)
 
-    for variable, info in procedure.items():
+    def var_worker(variable, info):
+
+
         params = base_vals
         lower_bound = info["range"][0]
         upper_bound = info["range"][1]
@@ -207,7 +210,7 @@ def explore(n: int):
         for val in np.arange(lower_bound, upper_bound, step_size):#range(lower_bound, upper_bound, step_size):
             params[variable] = val
             for _ in range(num_games):
-                dynamicAgent = MiniMaxAgent(player = 2, params=params)
+                dynamicAgent = MiniMaxAgent(player = 2, params=params, silent=True)
                 result = play_game(constantAgent, dynamicAgent, n)
                 if result == True:
                     results[variable]["wins"] += 1
@@ -215,10 +218,21 @@ def explore(n: int):
                     results[variable]["losses"] += 1
                 
                 results[variable]["win_rate"] = results[variable]["wins"] / (results[variable]["wins"] + results[variable]["losses"])
-            print(results[variable])
+                print(variable, results[variable])
+        
+                with open(f"{variable}.json", "w") as outfile:
+                    json.dump(results, outfile)
+
+    procs = []
+    for variable, info in procedure.items():
+        proc = Process(target=var_worker, args=(variable, info,))
+        procs.append(proc)
+        proc.start()
     
-    with open("explore.json", "w") as outfile:
-        json.dump(results, outfile)
+    print(f"exploration being conducted on {cpu_count()} cpu cores")
+
+    for proc in procs:
+        proc.join()
 
 
 
