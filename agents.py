@@ -3,7 +3,6 @@ import random
 import time
 import sys
 import copy
-from game import GameState
 
 class HumanAgent():
     def __init__(self, player: int = 1):
@@ -70,8 +69,8 @@ class MiniMaxAgent():
         self.OPP_REWARD = params["opp"]
         self.MIDDLE_MULTIPLIER = params["middle"]
 
-    def take_turn(self, game_state: GameState) -> int:
-        def minimax(state: GameState, maximizer: bool, depth: int, alpha: int = -sys.maxsize - 1, beta: int = sys.maxsize):
+    def take_turn(self, game_state) -> int:
+        def minimax(state, maximizer: bool, depth: int, alpha: int = -sys.maxsize - 1, beta: int = sys.maxsize):
             if state.terminal() or depth == 0: 
                 if state.has_won(self.max_player):      # max player receives large reward
                     return (None, sys.maxsize)
