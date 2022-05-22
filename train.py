@@ -39,13 +39,14 @@ def play_game(agent1, agent2, n):
 
 def explore(n: int):
     constantAgent = MiniMaxAgent(player=1)
+    # Previously used rewards for reference
     two = 2.0
     three = 4.0
     four = 100.0
     opp = -4.0
     middle = 3.0
     val_template = {"wins": 0, "losses": 0, "win_rate": 0}
-    num_games = 100
+    num_games = 25
     base_vals = {                
                     "two"   : 2.0 , 
                     "three" : 4.0 ,
@@ -55,10 +56,10 @@ def explore(n: int):
 
     procedure = {
                 "two"   : {"base_val": 2.0 , "range": (0.1, 10, 0.1)} , 
-                "three" : {"base_val": 4.0 , "range": (0.1, 20, 0.1)} ,
-                "four"  : {"base_val": 100 , "range": (10, 500, 1)} , 
-                "opp"   : {"base_val": -4.0, "range": (-50, -1, 1)} ,
-                "middle": {"base_val": 3.0 , "range": (1,  300, 1)}
+                "three" : {"base_val": 4.0 , "range": (0.1, 20, 0.2)} ,
+                "four"  : {"base_val": 100 , "range": (10, 1000, 10)} , 
+                "opp"   : {"base_val": -4.0, "range": (-50, -1, 0.5)} ,
+                "middle": {"base_val": 3.0 , "range": (1,  500, 5)}
     }
     results = {
                 "two"   : {} , 
