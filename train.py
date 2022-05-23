@@ -132,5 +132,18 @@ def explore(n: int):
     for proc in procs:
         proc.join()
 
+def merge_data(variables=["two", "three", "four", "opp", "middle"], var_splits=4):
+    results = {var: dict() for var in variables}
+    for var in variables:
+        for i in range(var_splits):
+            with open(f'results/{var}{i}.json', 'r') as f:
+                data = json.load(f)
+            results[var] = data | results[var]
+    with open('results.json', 'w') as f:
+        json.dump(results, f)
+            
+
 if __name__ == '__main__':
     explore(7)
+    merge_data()
+
