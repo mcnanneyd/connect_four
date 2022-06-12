@@ -10,7 +10,7 @@ from datetime import datetime
 import os
 
 class GameState():
-    def __init__(self, n: int, connect: int = 4, board: np.ndarray = None):
+    def __init__(self, n: int, m: int, connect: int = 4, board: np.ndarray = None):
         """
         Arguments:
             n: size of board (nxn)
@@ -25,7 +25,7 @@ class GameState():
         self.connect = connect
 
         self.num_columns = n
-        self.num_rows = n
+        self.num_rows = m
     
     def __repr__(self):
         repr_str = ""
@@ -40,22 +40,22 @@ class GameState():
                 else:
                     row_repr.append("-")
 
-            row_str = " " + " | ".join(row_repr) + "\n" + "_" * (self.size * 4 - 1) + "\n"
+            row_str = " " + " | ".join(row_repr) + "\n" + "_" * (self.num_rows * 4 - 1) + "\n"
             repr_str += row_str
         
         return repr_str
 
     def __copy__(self):
-        return GameState(self.size, self.connect, board=np.copy(self.board))
+        return GameState(self.num_columns, self.num_rows, self.connect, board=np.copy(self.board))
 
     def __deepcopy__(self):
-        return GameState(self.size, self.connect, board=np.copy(self.board))
+        return GameState(self.num_columns, self.num_rows, self.connect, board=np.copy(self.board))
 
     def add_piece(self, player: int, i: int):
         if self.board[:, i].all():
             raise ValueError("Selected column is full")
 
-        for j in range(self.size):
+        for j in range(self.num_rows):
             if self.board[j, i]:
                 self.board[j-1, i] = player
                 return

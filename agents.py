@@ -12,7 +12,7 @@ class HumanAgent():
         print("Select a valid index")
         valid = state.get_valid_indices()
         vis_list = []
-        for i in range(state.size):
+        for i in range(state.num_columns):
             if i in valid:
                 vis_list.append(str(i))
             else:
@@ -45,7 +45,7 @@ class RandomAgent():
 
 
 class MiniMaxAgent():
-    def __init__(self, player: int = 2, params = None, silent = True, randomize = True):
+    def __init__(self, player: int = 2, params = None, silent = True, randomize = False):
         self.max_player = player
         self.min_player = 2 if player == 1 else 1
         self.silent = silent

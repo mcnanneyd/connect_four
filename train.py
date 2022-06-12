@@ -9,10 +9,14 @@ from agents import MiniMaxAgent
 from multiprocessing import Process, cpu_count
 from datetime import datetime
 import os
+import matplotlib.pyplot as plt
+import numpy as np
+
+np.set_printoptions(precision=10)
 
 
-def play_game(agent1, agent2, n):
-    board = GameState(n)
+def play_game(agent1, agent2, n, m):
+    board = GameState(n, m)
     while True:
         if board.is_full():
             break
@@ -37,8 +41,8 @@ def play_game(agent1, agent2, n):
 
 
 
-def explore(n: int):
-    constantAgent = MiniMaxAgent(player=1)
+def explore(n: int, m: int):
+    constantAgent = MiniMaxAgent(player=1, randomize=True)
     # Previously used rewards for reference
     two = 2.0
     three = 4.0
@@ -46,7 +50,7 @@ def explore(n: int):
     opp = -4.0
     middle = 3.0
     val_template = {"wins": 0, "losses": 0, "win_rate": 0}
-    num_games = 25
+    num_games = 15
     base_vals = {                
                     "two"   : 2.0 , 
                     "three" : 4.0 ,
@@ -77,17 +81,17 @@ def explore(n: int):
                 results[val] = {"wins": 0, "losses": 0, "win_rate": 0}
                 params[variable] = val
                 for run in range(num_games):
-                    constantAgent = MiniMaxAgent(player=1)
-                    dynamicAgent = MiniMaxAgent(player = 2, params=params, silent=True, randomize=False)
-                    result = play_game(constantAgent, dynamicAgent, n)
+                    constantAgent = MiniMaxAgent(player=1, randomize=True)
+                    dynamicAgent = MiniMaxAgent(player = 2, params=params, silent=True)
+                    result = play_game(constantAgent, dynamicAgent, n, m)
                     if result == True:
                         results[val]["wins"] += 1
                     elif result == False:
                         results[val]["losses"] += 1
                     else:
-                        constantAgent = MiniMaxAgent(player=1)
-                        dynamicAgent = MiniMaxAgent(player = 2, params=params, silent=True, randomize=False)
-                        result = play_game(constantAgent, dynamicAgent, n)
+                        constantAgent = MiniMaxAgent(player=1,randomize=True)
+                        dynamicAgent = MiniMaxAgent(player = 2, params=params, silent=True)
+                        result = play_game(constantAgent, dynamicAgent, n, m)
                         if result is None:
                             continue
 
@@ -101,8 +105,6 @@ def explore(n: int):
                     with open(f"results/{variable}{index}.json", "w") as outfile:
                         json.dump(results, outfile)
 
-                    
-
 
         lower_bound = info["range"][0]
         upper_bound = info["range"][1]
@@ -110,7 +112,7 @@ def explore(n: int):
         results[variable] = val_template.copy()
         all_vals = np.arange(float(lower_bound), float(upper_bound), float(step_size))
         sections = np.array_split(all_vals, 4)
-
+        print(variable, all_vals)
         range_procs = []
         for i, section in enumerate(sections):
             proc = Process(target=range_worker, args=(variable, section, i,))
@@ -127,7 +129,7 @@ def explore(n: int):
         procs.append(proc)
         proc.start()
     
-    print(f"exploration being conducted on {cpu_count()} cpu cores")
+    print(f"exploration being conducted on {cpu_count()} threads")
 
     for proc in procs:
         proc.join()
@@ -143,7 +145,33 @@ def merge_data(variables=["two", "three", "four", "opp", "middle"], var_splits=4
         json.dump(results, f)
             
 
+def plot_data(variables=["two", "three", "four", "opp", "middle"]):
+    with open('results.json', 'r') as f:
+        data = json.load(f)
+
+    fig, axs = plt.subplots(len(variables))
+
+    for i, var in enumerate(variables):
+        var_data = data[var]
+        keys = sorted([float(x) for x in var_data.keys()])
+        print(keys)
+        values = []
+        win_rates = []
+        for key in keys:
+            values.append(float(key))
+            win_rates.append(var_data[key]['win_rate'])
+        print(values)
+        axs[i].plot(values, win_rates)
+        axs[i].set_title(var)
+    plt.show()
+
+
+
+
+
+
 if __name__ == '__main__':
-    explore(7)
+    explore(7, 6)
     merge_data()
+    plot_data()
 
