@@ -41,7 +41,7 @@ def play_game(agent1, agent2, n, m):
 
 
 
-def explore(n: int, m: int):
+def explore(n: int, m: int, num_games: int=100):
     constantAgent = MiniMaxAgent(player=1, randomize=True)
     # Previously used rewards for reference
     two = 2.0
@@ -50,7 +50,6 @@ def explore(n: int, m: int):
     opp = -4.0
     middle = 3.0
     val_template = {"wins": 0, "losses": 0, "win_rate": 0}
-    num_games = 15
     base_vals = {                
                     "two"   : 2.0 , 
                     "three" : 4.0 ,
@@ -100,7 +99,7 @@ def explore(n: int, m: int):
                     else:
                         continue
 
-                    print(f"{variable}{index}.json     run {i * 100 + run }/{len(values) * 100}:", results[val])
+                    print(f"{variable}{index}.json     run {i * num_games + run }/{len(values) * num_games}:", results[val])
 
                     with open(f"results/{variable}{index}.json", "w") as outfile:
                         json.dump(results, outfile)
@@ -150,16 +149,18 @@ def plot_data(variables=["two", "three", "four", "opp", "middle"]):
         data = json.load(f)
 
     fig, axs = plt.subplots(len(variables))
+    print(axs)
 
     for i, var in enumerate(variables):
         var_data = data[var]
         keys = sorted([float(x) for x in var_data.keys()])
+        keystr = [str(x) for x in var_data.keys()]
         print(keys)
         values = []
         win_rates = []
-        for key in keys:
+        for j, key in enumerate(keys):
             values.append(float(key))
-            win_rates.append(var_data[key]['win_rate'])
+            win_rates.append(var_data[keystr[j]]['win_rate'])
         print(values)
         axs[i].plot(values, win_rates)
         axs[i].set_title(var)
@@ -171,7 +172,7 @@ def plot_data(variables=["two", "three", "four", "opp", "middle"]):
 
 
 if __name__ == '__main__':
-    explore(7, 6)
+    explore(7, 6, num_games=250)
     merge_data()
     plot_data()
 
