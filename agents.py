@@ -59,7 +59,7 @@ class MiniMaxAgent():
             }
         if randomize:
             for key in params.keys():
-                params[key] *= random.uniform(0.1, 10)
+                params[key] *= random.uniform(0.5, 1.5)
 
 
 

@@ -16,7 +16,7 @@ class GameState():
             n: size of board (nxn)
         """
         if board is None:
-            self.board = np.zeros((n, n))
+            self.board = np.zeros((m, n))
         else:
             self.board = board
         self.player1 = 1
@@ -129,8 +129,8 @@ class GameState():
         return self.__repr__()
             
 
-def human(n: int):
-    board = GameState(n)
+def human(n: int, m: int):
+    board = GameState(n, m)
     player1 = HumanAgent(player=1)
     player2 = HumanAgent(player=2)
 
@@ -165,8 +165,8 @@ if __name__ == '__main__':
                     help='size of nXn connect four matrix', nargs="?")
 
     args = parser.parse_args()
-    n = args.size
+    #n = args.size
     #while True:
-    #human(n)
-    print(os.listdir())
+    human(7, 6)
+    #print(os.listdir())
     #explore(n)
