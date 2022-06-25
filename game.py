@@ -3,11 +3,6 @@ from re import U
 import numpy as np
 import argparse
 from agents import *
-import copy
-import json
-from multiprocessing import Process, cpu_count
-from datetime import datetime
-import os
 
 class GameState():
     def __init__(self, n: int, m: int, connect: int = 4, board: np.ndarray = None):
